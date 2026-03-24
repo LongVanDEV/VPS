@@ -25,7 +25,7 @@ If this is your first time discovering the Dino game, welcome! It's super easy t
 **Pause:** Press Alt  
 **Night Mode:** Every 700 points, the background switches to black for 100 points — just to keep you on your toes!
 
-![Chrome Dino](/images/chromeDino.gif)
+![Chrome Dino](https://raw.githubusercontent.com/MathewSachin/MathewSachin.GitHub.io/refs/heads/master/images/chromeDino.gif)
 
 ## Opening Developer Tools / Chrome Console
 
@@ -148,7 +148,7 @@ Try `20` for floaty, sky-high jumps that easily clear everything on screen, or d
 
 Ever wondered what it’s like for the dino to defy gravity? You can make it walk through the sky with this fun trick!
 
-<img alt="Chrome Dino walking in air" src="/images/sky_dino.jpg" width="400">
+<img alt="Chrome Dino walking in air" src="https://raw.githubusercontent.com/MathewSachin/MathewSachin.GitHub.io/refs/heads/master/images/sky_dino.jpg" width="400">
 
 The `groundYPos` property controls the vertical position where the dino “rests” when not jumping — measured in pixels from the top of the canvas. The normal ground level is **93**. Setting it to `0` moves the dino’s resting position to the very top of the screen.
 
