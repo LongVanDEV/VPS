@@ -175,7 +175,7 @@ Now your dino is floating through the sky or back to solid ground, all at your c
 
 Want the dino to play itself? There's a JavaScript bot you can paste straight into the Console that detects every cactus and pterodactyl and reacts automatically.
 
-👉 **[Full script + step-by-step explanation → Auto-play the Chrome Dino Game]({% post_url /blog/2026-03-14-chrome-dino-autoplay %})**
+👉 **[Full script + step-by-step explanation → Auto-play the Chrome Dino Game]({% post_url /blog/read %})**
 
 ## Invisibility
 
