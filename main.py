@@ -44,11 +44,30 @@ SLEEP_PULSE = ["● away · sleeping", "○ away · sleeping", "· away · sleep
 
 def parse_days_left(text: str):
     """'Active (5d left) • in 6 days' → 5.0"""
+    if not text:
+        return None
     for unit, div in (("d", 1), ("h", 24), ("m", 1440)):
         m = re.search(rf"\(\s*(\d+(?:\.\d+)?)\s*{unit}\s+left", text, re.IGNORECASE)
         if m:
             return float(m.group(1)) / div
     return None
+
+
+def extract_text(msg):
+    """Pull readable text from a Discord message — content OR embeds."""
+    parts = []
+    if msg.content:
+        parts.append(msg.content)
+    for e in (msg.embeds or []):
+        if e.title:
+            parts.append(e.title)
+        if e.description:
+            parts.append(e.description)
+        for f in (e.fields or []):
+            parts.append(f"{f.name} {f.value}")
+        if e.footer and e.footer.text:
+            parts.append(e.footer.text)
+    return "\n".join(parts)
 
 
 # ── the bot ─────────────────────────────────────────────
@@ -174,42 +193,52 @@ class AnimBot(discord.Client):
     async def check_vps(self):
         try:
             user = await self.fetch_user(VPS_BOT_ID)
-            dm = await user.create_dm()
+            dm   = await user.create_dm()
 
             self.log("[vps] sending '1manage'")
             await dm.send(VPS_QUERY_CMD)
-            await asyncio.sleep(8)
+            await asyncio.sleep(10)
 
             days = None
-            async for msg in dm.history(limit=10):
-                if msg.author.id != VPS_BOT_ID:
+            async for msg in dm.history(limit=15):
+                is_bot = (msg.author.id == VPS_BOT_ID
+                          or getattr(msg, "application_id", None) == VPS_BOT_ID)
+                text = extract_text(msg)
+
+                self.log(f"[vps debug] author={msg.author.id} "
+                         f"app={getattr(msg,'application_id',None)} "
+                         f"bot={is_bot} len={len(text)} "
+                         f"text={text[:120]!r}")
+
+                if not is_bot:
                     continue
-                d = parse_days_left(msg.content)
+                d = parse_days_left(text)
                 if d is not None:
                     days = d
-                    self.log(f"[vps] raw: {msg.content[:80]!r}")
+                    self.log(f"[vps] {days:.2f} days left")
                     break
 
             if days is None:
-                self.log("[vps] couldn't parse expiry — no reply or unknown format")
+                self.log("[vps] couldn't parse expiry — see debug lines above")
                 self.vps_last_check = datetime.now(timezone.utc)
                 return
 
-            self.vps_days_left = days
+            self.vps_days_left  = days
             self.vps_last_check = datetime.now(timezone.utc)
-            self.log(f"[vps] {days:.2f} days left")
 
             if days < RENEW_THRESHOLD_DAYS:
                 self.log("[vps] below threshold → sending '1vps renew'")
                 sent_at = datetime.now(timezone.utc)
                 await dm.send(VPS_RENEW_CMD)
                 self.vps_last_action = "renewed"
-                await asyncio.sleep(10)
+                await asyncio.sleep(12)
 
                 async for msg in dm.history(limit=20, after=sent_at):
-                    if msg.author.id != VPS_BOT_ID:
+                    is_bot = (msg.author.id == VPS_BOT_ID
+                              or getattr(msg, "application_id", None) == VPS_BOT_ID)
+                    if not is_bot:
                         continue
-                    d = parse_days_left(msg.content)
+                    d = parse_days_left(extract_text(msg))
                     if d is not None:
                         self.vps_days_left = d
                         self.log(f"[vps] renewed → now {d:.2f} days left")
